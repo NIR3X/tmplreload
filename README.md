@@ -79,7 +79,7 @@ func main() {
 	<title>Example Template</title>
 </head>
 <body>
-	<h1>Hello, {{ .Message }}!</h1>
+	<h1>{{ .Message }}!</h1>
 	<p>Current time: {{ currentTime }}</p>
 </body>
 </html>
