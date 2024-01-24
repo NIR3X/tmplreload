@@ -1,4 +1,4 @@
-# tmplreload
+# tmplreload - Auto-Reloading Templates for Go
 
 `tmplreload` is a Go module that provides auto-reloading templates based on the `html/template` package. It allows you to create templates that automatically reload when the underlying template file changes. This can be particularly useful during development when you want to see the changes to your templates without restarting your application.
 
