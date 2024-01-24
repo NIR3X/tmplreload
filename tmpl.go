@@ -81,7 +81,9 @@ func (t *Tmpl) Option(opt ...string) {
 		key := o[:index]
 		value := o[index+1:]
 		t.options[key] = value
-		t.tmpl.Option(o)
+		if t.tmpl != nil {
+			t.tmpl.Option(o)
+		}
 	}
 }
 
@@ -111,7 +113,7 @@ func (t *Tmpl) parseFile(filename string, lock bool) (err error) {
 				tmpl.Funcs(funcMap)
 			})
 			for key, value := range t.options {
-				t.tmpl.Option(key + "=" + value)
+				tmpl.Option(key + "=" + value)
 			}
 			tmpl, err = tmpl.ParseFiles(filename)
 			if err == nil {
@@ -148,7 +150,7 @@ func (t *Tmpl) Execute(wr io.Writer, data interface{}) (err error) {
 
 	t.mtx.RLock()
 	initiated := t.tmpl != nil
-	updateRequired := initiated && t.lastUpdate < currentTime
+	updateRequired := t.lastUpdate < currentTime
 	t.mtx.RUnlock()
 
 	if !initiated {
@@ -166,7 +168,11 @@ func (t *Tmpl) Execute(wr io.Writer, data interface{}) (err error) {
 
 	if err == nil {
 		t.mtx.RLock()
-		err = t.tmpl.Execute(wr, data)
+		if t.tmpl == nil {
+			err = os.ErrNotExist
+		} else {
+			err = t.tmpl.Execute(wr, data)
+		}
 		t.mtx.RUnlock()
 	}
 
