@@ -67,3 +67,22 @@ func main() {
 	http.ListenAndServe(":8000", nil)
 }
 ```
+
+## Example HTML Template (templates/index.html)
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Example Template</title>
+</head>
+<body>
+	<h1>Hello, {{ .Message }}!</h1>
+	<p>Current time: {{ currentTime }}</p>
+</body>
+</html>
+```
+
+In this example, the `tmplreload` module is used to create a template collection (`TmplColl`). Templates are parsed from the "templates" directory, and a function (`currentTime`) is added to the function map. The HTTP server renders the template on incoming requests.
