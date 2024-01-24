@@ -87,6 +87,10 @@ func main() {
 
 In this example, the `tmplreload` module is used to create a template collection (`TmplColl`). Templates are parsed from the "templates" directory, and a function (`currentTime`) is added to the function map. The HTTP server renders the template on incoming requests.
 
+## Documentation
+
+* [GoDoc](https://pkg.go.dev/github.com/NIR3X/tmplreload#section-documentation)
+
 ## License
 [![GNU AGPLv3 Image](https://www.gnu.org/graphics/agplv3-155x51.png)](https://www.gnu.org/licenses/agpl-3.0.html)  
 
