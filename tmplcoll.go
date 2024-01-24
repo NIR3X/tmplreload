@@ -24,6 +24,10 @@ type CollTmpl interface {
 // A function that determines whether or not a file should be parsed.
 type DirFilter func(dir, path string, info os.FileInfo) bool
 
+func DirFilterAll(dir, path string, info os.FileInfo) bool {
+	return true
+}
+
 func DirFilterHTML(dir, path string, info os.FileInfo) bool {
 	switch filepath.Ext(path) {
 	case ".html", ".htm":
@@ -306,11 +310,14 @@ func (t *TmplColl) IndexDirs() {
 	t.mtx.RUnlock()
 
 	for dir, dirFilter := range dirs {
+		if dirFilter == nil {
+			dirFilter = DirFilterHTML
+		}
 		filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
 			if err != nil || info.IsDir() {
 				return nil
 			}
-			if dirFilter != nil && !dirFilter(dir, path, info) {
+			if !dirFilter(dir, path, info) {
 				return nil
 			}
 			t.parseFiles(false, path)
