@@ -22,7 +22,7 @@ type CollTmpl interface {
 }
 
 // A function that determines whether or not a file should be parsed.
-type TmplCollDirFilter func(dir, path string, info os.FileInfo) bool
+type DirFilter func(dir, path string, info os.FileInfo) bool
 
 func DirFilterHTML(dir, path string, info os.FileInfo) bool {
 	switch filepath.Ext(path) {
@@ -44,7 +44,7 @@ type TmplColl struct {
 	funcMap          *funcMap
 	options          map[string]string
 	tmpls            map[string]*Tmpl
-	dirs             map[string]TmplCollDirFilter
+	dirs             map[string]DirFilter
 }
 
 // Creates a new TmplColl.
@@ -63,7 +63,7 @@ func New(cleanupIntvlSecs ...int64) *TmplColl {
 		funcMap:          newFuncMap(),
 		options:          map[string]string{},
 		tmpls:            map[string]*Tmpl{},
-		dirs:             map[string]TmplCollDirFilter{},
+		dirs:             map[string]DirFilter{},
 	}
 
 	tmplColl.wg.Add(1)
@@ -299,7 +299,7 @@ func (t *TmplColl) IndexDirs() {
 	defer t.modsMtx.Unlock()
 
 	t.mtx.RLock()
-	dirs := make(map[string]TmplCollDirFilter, len(t.dirs))
+	dirs := make(map[string]DirFilter, len(t.dirs))
 	for dir, dirFilter := range t.dirs {
 		dirs[dir] = dirFilter
 	}
@@ -320,7 +320,7 @@ func (t *TmplColl) IndexDirs() {
 }
 
 // Adds the directory to the list of directories to watch for changes.
-func (t *TmplColl) WatchDir(dir string, dirFilter TmplCollDirFilter) error {
+func (t *TmplColl) WatchDir(dir string, dirFilter DirFilter) error {
 	t.modsMtx.Lock()
 	defer t.modsMtx.Unlock()
 
