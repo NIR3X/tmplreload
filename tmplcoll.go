@@ -21,6 +21,18 @@ type CollTmpl interface {
 	Execute(wr io.Writer, data interface{}) (err error)
 }
 
+// A function that determines whether or not a file should be parsed.
+type TmplCollDirFilter func(dir, path string, info os.FileInfo) bool
+
+func DirFilterHTML(dir, path string, info os.FileInfo) bool {
+	switch filepath.Ext(path) {
+	case ".html", ".htm":
+		return true
+	default:
+		return false
+	}
+}
+
 // A struct that manages a collection of templates.
 type TmplColl struct {
 	mtx              sync.RWMutex
@@ -32,7 +44,7 @@ type TmplColl struct {
 	funcMap          *funcMap
 	options          map[string]string
 	tmpls            map[string]*Tmpl
-	dirs             map[string]struct{}
+	dirs             map[string]TmplCollDirFilter
 }
 
 // Creates a new TmplColl.
@@ -51,7 +63,7 @@ func New(cleanupIntvlSecs ...int64) *TmplColl {
 		funcMap:          newFuncMap(),
 		options:          map[string]string{},
 		tmpls:            map[string]*Tmpl{},
-		dirs:             map[string]struct{}{},
+		dirs:             map[string]TmplCollDirFilter{},
 	}
 
 	tmplColl.wg.Add(1)
@@ -287,15 +299,18 @@ func (t *TmplColl) IndexDirs() {
 	defer t.modsMtx.Unlock()
 
 	t.mtx.RLock()
-	dirs := make([]string, 0, len(t.dirs))
-	for dir := range t.dirs {
-		dirs = append(dirs, dir)
+	dirs := make(map[string]TmplCollDirFilter, len(t.dirs))
+	for dir, dirFilter := range t.dirs {
+		dirs[dir] = dirFilter
 	}
 	t.mtx.RUnlock()
 
-	for _, dir := range dirs {
+	for dir, dirFilter := range dirs {
 		filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
 			if err != nil || info.IsDir() {
+				return nil
+			}
+			if dirFilter != nil && !dirFilter(dir, path, info) {
 				return nil
 			}
 			t.parseFiles(false, path)
@@ -305,7 +320,7 @@ func (t *TmplColl) IndexDirs() {
 }
 
 // Adds the directory to the list of directories to watch for changes.
-func (t *TmplColl) WatchDir(dir string) error {
+func (t *TmplColl) WatchDir(dir string, dirFilter TmplCollDirFilter) error {
 	t.modsMtx.Lock()
 	defer t.modsMtx.Unlock()
 
@@ -315,7 +330,7 @@ func (t *TmplColl) WatchDir(dir string) error {
 	}
 
 	t.mtx.Lock()
-	t.dirs[absPath] = struct{}{}
+	t.dirs[absPath] = dirFilter
 	t.mtx.Unlock()
 
 	return nil

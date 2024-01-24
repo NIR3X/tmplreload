@@ -166,7 +166,7 @@ func TestTmplColl(t *testing.T) {
 	// Remove the template.
 	tmplColl.RemoveFiles(filePath)
 	// Watch directory with the removed template.
-	err = tmplColl.WatchDir(tmpDir)
+	err = tmplColl.WatchDir(tmpDir, DirFilterHTML)
 	if err != nil {
 		t.Fatal(err)
 	}
