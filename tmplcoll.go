@@ -90,7 +90,7 @@ func New(cleanupIntvlSecs ...int64) *TmplColl {
 	return tmplColl
 }
 
-// Stops the TmplColl from removing stale templates.
+// Stops the TmplColl from removing stale templates and watching directories.
 func (t *TmplColl) Stop() {
 	close(t.stopChan)
 	t.wg.Wait()
