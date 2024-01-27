@@ -6,7 +6,6 @@
 
 * **Auto-Reloading:** Templates are automatically reloaded when the underlying file changes.
 * **Function Map Management:** Easily add, remove, or update template functions.
-* **Directory Watching:** Watch multiple directories for changes and automatically reload templates.
 
 ## Installation
 

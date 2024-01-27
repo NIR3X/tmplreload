@@ -162,35 +162,4 @@ func TestTmplColl(t *testing.T) {
 	if buf.String() != updatedTestData {
 		t.Fatal("Unexpected template output")
 	}
-
-	// Remove the template.
-	tmplColl.RemoveFiles(filePath)
-	// Watch directory with the removed template.
-	err = tmplColl.WatchDir(tmpDir, DirFilterHTML)
-	if err != nil {
-		t.Fatal(err)
-	}
-	// Index the watched directories.
-	tmplColl.IndexDirs()
-
-	// Render the template again.
-	buf.Reset()
-	err = tmplColl.ExecuteTemplate(&buf, filePath, nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if buf.String() != updatedTestDataExpected {
-		t.Fatal("Unexpected template output")
-	}
-
-	if tmplColl.Lookup(filePath) == nil {
-		t.Fatal("Expected template to exist")
-	}
-	err = tmplColl.UnwatchDir(tmpDir)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if tmplColl.Lookup(filePath) != nil {
-		t.Fatal("Expected template to not exist")
-	}
 }

@@ -21,22 +21,6 @@ type CollTmpl interface {
 	Execute(wr io.Writer, data interface{}) (err error)
 }
 
-// A function that determines whether or not a file should be parsed.
-type DirFilter func(dir, path string, info os.FileInfo) bool
-
-func DirFilterAll(dir, path string, info os.FileInfo) bool {
-	return true
-}
-
-func DirFilterHTML(dir, path string, info os.FileInfo) bool {
-	switch filepath.Ext(path) {
-	case ".html", ".htm":
-		return true
-	default:
-		return false
-	}
-}
-
 // A struct that manages a collection of templates.
 type TmplColl struct {
 	mtx              sync.RWMutex
@@ -48,7 +32,6 @@ type TmplColl struct {
 	funcMap          *funcMap
 	options          map[string]string
 	tmpls            map[string]*Tmpl
-	dirs             map[string]DirFilter
 }
 
 // Creates a new TmplColl.
@@ -67,7 +50,6 @@ func New(cleanupIntvlSecs ...int64) *TmplColl {
 		funcMap:          newFuncMap(),
 		options:          map[string]string{},
 		tmpls:            map[string]*Tmpl{},
-		dirs:             map[string]DirFilter{},
 	}
 
 	t.wg.Add(1)
@@ -78,8 +60,7 @@ func New(cleanupIntvlSecs ...int64) *TmplColl {
 		for {
 			select {
 			case <-ticker.C:
-				t.IndexDirs()
-				t.RemoveStaleTemplates()
+				t.RemoveStaleFiles()
 			case <-t.stopChan:
 				ticker.Stop()
 				return
@@ -90,7 +71,7 @@ func New(cleanupIntvlSecs ...int64) *TmplColl {
 	return t
 }
 
-// Stops the TmplColl from removing stale templates and watching directories.
+// Stops the TmplColl from removing stale templates.
 func (t *TmplColl) Stop() {
 	close(t.stopChan)
 	t.wg.Wait()
@@ -276,7 +257,7 @@ func (t *TmplColl) RemoveFiles(filenames ...string) {
 }
 
 // Removes templates that no longer exist.
-func (t *TmplColl) RemoveStaleTemplates() {
+func (t *TmplColl) RemoveStaleFiles() {
 	t.modsMtx.Lock()
 	defer t.modsMtx.Unlock()
 
@@ -295,76 +276,4 @@ func (t *TmplColl) RemoveStaleTemplates() {
 			t.mtx.Unlock()
 		}
 	}
-}
-
-// Indexes the directories that are being watched immediately.
-func (t *TmplColl) IndexDirs() {
-	t.modsMtx.Lock()
-	defer t.modsMtx.Unlock()
-
-	t.mtx.RLock()
-	dirs := make(map[string]DirFilter, len(t.dirs))
-	for dir, dirFilter := range t.dirs {
-		dirs[dir] = dirFilter
-	}
-	t.mtx.RUnlock()
-
-	for dir, dirFilter := range dirs {
-		if dirFilter == nil {
-			dirFilter = DirFilterHTML
-		}
-		filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
-			if err != nil || info.IsDir() {
-				return nil
-			}
-			if !dirFilter(dir, path, info) {
-				return nil
-			}
-			t.parseFiles(false, path)
-			return nil
-		})
-	}
-}
-
-// Adds the directory to the list of directories to watch for changes.
-func (t *TmplColl) WatchDir(dir string, dirFilter DirFilter) error {
-	t.modsMtx.Lock()
-	defer t.modsMtx.Unlock()
-
-	absPath, err := filepath.Abs(dir)
-	if err != nil {
-		return err
-	}
-
-	t.mtx.Lock()
-	t.dirs[absPath] = dirFilter
-	t.mtx.Unlock()
-
-	return nil
-}
-
-// Removes the directory from the list of directories to watch for changes
-// and removes the templates associated with the directory.
-func (t *TmplColl) UnwatchDir(dir string) error {
-	t.modsMtx.Lock()
-	defer t.modsMtx.Unlock()
-
-	absPath, err := filepath.Abs(dir)
-	if err != nil {
-		return err
-	}
-
-	t.mtx.Lock()
-	delete(t.dirs, absPath)
-	t.mtx.Unlock()
-
-	filepath.Walk(absPath, func(path string, info os.FileInfo, err error) error {
-		if err != nil || info.IsDir() {
-			return nil
-		}
-		t.removeFiles(false, path)
-		return nil
-	})
-
-	return nil
 }
