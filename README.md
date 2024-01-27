@@ -13,7 +13,7 @@
 To use `tmplreload` in your Go project, you can simply run:
 
 ```bash
-go get github.com/NIR3X/tmplreload
+go get -u github.com/NIR3X/tmplreload
 ```
 
 ## Example Usage

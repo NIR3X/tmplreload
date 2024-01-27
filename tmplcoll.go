@@ -57,7 +57,7 @@ func New(cleanupIntvlSecs ...int64) *TmplColl {
 		cleanupIntvlSecs = []int64{60}
 	}
 
-	tmplColl := &TmplColl{
+	t := &TmplColl{
 		mtx:              sync.RWMutex{},
 		modsMtx:          sync.Mutex{},
 		stopChan:         make(chan struct{}),
@@ -70,24 +70,24 @@ func New(cleanupIntvlSecs ...int64) *TmplColl {
 		dirs:             map[string]DirFilter{},
 	}
 
-	tmplColl.wg.Add(1)
+	t.wg.Add(1)
 	go func() {
-		defer tmplColl.wg.Done()
-		ticker := time.NewTicker(time.Duration(tmplColl.cleanupIntvlSecs) * time.Second)
+		defer t.wg.Done()
+		ticker := time.NewTicker(time.Duration(t.cleanupIntvlSecs) * time.Second)
 
 		for {
 			select {
 			case <-ticker.C:
-				tmplColl.IndexDirs()
-				tmplColl.RemoveStaleTemplates()
-			case <-tmplColl.stopChan:
+				t.IndexDirs()
+				t.RemoveStaleTemplates()
+			case <-t.stopChan:
 				ticker.Stop()
 				return
 			}
 		}
 	}()
 
-	return tmplColl
+	return t
 }
 
 // Stops the TmplColl from removing stale templates and watching directories.
