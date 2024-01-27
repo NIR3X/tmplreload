@@ -86,9 +86,9 @@ func (t *TmplColl) Delims(left, right string) {
 
 // Adds the template function to the function map.
 func (t *TmplColl) FuncAdd(name string, function interface{}) {
-	t.funcMap.funcAdd(name, function)
 	t.mtx.Lock()
 	defer t.mtx.Unlock()
+	t.funcMap.funcAdd(name, function)
 	for _, tmpl := range t.tmpls {
 		tmpl.FuncAdd(name, function)
 	}
@@ -96,9 +96,9 @@ func (t *TmplColl) FuncAdd(name string, function interface{}) {
 
 // Adds the template functions to the function map.
 func (t *TmplColl) FuncsAdd(funcMap template.FuncMap) {
-	t.funcMap.funcsAdd(funcMap)
 	t.mtx.Lock()
 	defer t.mtx.Unlock()
+	t.funcMap.funcsAdd(funcMap)
 	for _, tmpl := range t.tmpls {
 		tmpl.FuncsAdd(funcMap)
 	}
@@ -106,9 +106,9 @@ func (t *TmplColl) FuncsAdd(funcMap template.FuncMap) {
 
 // Removes the template functions from the function map.
 func (t *TmplColl) FuncsRemove(names ...string) {
-	t.funcMap.funcsRemove(names...)
 	t.mtx.Lock()
 	defer t.mtx.Unlock()
+	t.funcMap.funcsRemove(names...)
 	for _, tmpl := range t.tmpls {
 		tmpl.FuncsRemove(names...)
 	}

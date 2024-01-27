@@ -47,24 +47,24 @@ func (t *Tmpl) Delims(left, right string) {
 
 // Adds the template function to the function map.
 func (t *Tmpl) FuncAdd(name string, function interface{}) {
-	t.funcMap.funcAdd(name, function)
 	t.mtx.Lock()
+	t.funcMap.funcAdd(name, function)
 	t.funcMapUpdated = true
 	t.mtx.Unlock()
 }
 
 // Adds the template functions to the function map.
 func (t *Tmpl) FuncsAdd(funcMap template.FuncMap) {
-	t.funcMap.funcsAdd(funcMap)
 	t.mtx.Lock()
+	t.funcMap.funcsAdd(funcMap)
 	t.funcMapUpdated = true
 	t.mtx.Unlock()
 }
 
 // Removes the template functions from the function map.
 func (t *Tmpl) FuncsRemove(names ...string) {
-	t.funcMap.funcsRemove(names...)
 	t.mtx.Lock()
+	t.funcMap.funcsRemove(names...)
 	t.funcMapUpdated = true
 	t.mtx.Unlock()
 }
@@ -141,7 +141,7 @@ func (t *Tmpl) Reload() error {
 	t.mtx.RLock()
 	lastParsed := t.lastParsed
 	t.mtx.RUnlock()
-	return t.parseFile(lastParsed, false)
+	return t.ParseFile(lastParsed)
 }
 
 // Executes the template.
