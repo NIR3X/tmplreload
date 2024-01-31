@@ -32,7 +32,7 @@ import (
 
 func main() {
 	// Create a new TmplColl (Template Collection).
-	tmplColl := tmplreload.NewTmplColl()
+	tmplColl := tmplreload.NewTmplColl(60, 1)
 
 	// Close the TmplColl when the main function ends.
 	defer tmplColl.Close()

@@ -13,28 +13,33 @@ import (
 
 // A template that reloads itself when the underlying file changes.
 type Tmpl struct {
-	mtx            sync.RWMutex
-	delims         [2]string
-	funcMap        *funcMap
-	funcMapUpdated bool
-	options        map[string]string
-	tmpl           *template.Template
-	lastMod        int64
-	lastUpdate     int64
-	lastParsed     string
+	mtx                sync.RWMutex
+	minUpdateIntvlSecs int64
+	delims             [2]string
+	funcMap            *funcMap
+	funcMapUpdated     bool
+	options            map[string]string
+	tmpl               *template.Template
+	lastMod            int64
+	lastUpdate         int64
+	lastParsed         string
 }
 
 // Creates a new template.
-func NewTmpl() *Tmpl {
+func NewTmpl(minUpdateIntvlSecs ...int64) *Tmpl {
+	if len(minUpdateIntvlSecs) == 0 {
+		minUpdateIntvlSecs = []int64{1}
+	}
 	return &Tmpl{
-		mtx:            sync.RWMutex{},
-		delims:         [2]string{"{{", "}}"},
-		funcMap:        newFuncMap(),
-		funcMapUpdated: false,
-		options:        map[string]string{},
-		tmpl:           nil,
-		lastMod:        math.MinInt64,
-		lastUpdate:     math.MinInt64,
+		mtx:                sync.RWMutex{},
+		minUpdateIntvlSecs: minUpdateIntvlSecs[0],
+		delims:             [2]string{"{{", "}}"},
+		funcMap:            newFuncMap(),
+		funcMapUpdated:     false,
+		options:            map[string]string{},
+		tmpl:               nil,
+		lastMod:            math.MinInt64,
+		lastUpdate:         math.MinInt64,
 	}
 }
 
@@ -150,7 +155,7 @@ func (t *Tmpl) Execute(wr io.Writer, data interface{}) (err error) {
 
 	t.mtx.RLock()
 	initiated := t.tmpl != nil
-	updateRequired := t.lastUpdate < currentTime
+	updateRequired := t.minUpdateIntvlSecs != -1 && t.lastUpdate+t.minUpdateIntvlSecs <= currentTime
 	t.mtx.RUnlock()
 
 	if !initiated {

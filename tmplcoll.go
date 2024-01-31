@@ -23,33 +23,32 @@ type CollTmpl interface {
 
 // A struct that manages a collection of templates.
 type TmplColl struct {
-	mtx              sync.RWMutex
-	modsMtx          sync.Mutex
-	stopChan         chan struct{}
-	wg               sync.WaitGroup
-	cleanupIntvlSecs int64
-	delims           [2]string
-	funcMap          *funcMap
-	options          map[string]string
-	tmpls            map[string]*Tmpl
+	mtx                sync.RWMutex
+	modsMtx            sync.Mutex
+	stopChan           chan struct{}
+	wg                 sync.WaitGroup
+	cleanupIntvlSecs   int64
+	minUpdateIntvlSecs int64
+	delims             [2]string
+	funcMap            *funcMap
+	options            map[string]string
+	tmpls              map[string]*Tmpl
 }
 
 // Creates a new TmplColl.
-func NewTmplColl(cleanupIntvlSecs ...int64) *TmplColl {
-	if len(cleanupIntvlSecs) == 0 {
-		cleanupIntvlSecs = []int64{60}
-	}
-
+// e. g. NewTmplColl(60, 1)
+func NewTmplColl(cleanupIntvlSecs, minUpdateIntvlSecs int64) *TmplColl {
 	t := &TmplColl{
-		mtx:              sync.RWMutex{},
-		modsMtx:          sync.Mutex{},
-		stopChan:         make(chan struct{}),
-		wg:               sync.WaitGroup{},
-		cleanupIntvlSecs: cleanupIntvlSecs[0],
-		delims:           [2]string{"{{", "}}"},
-		funcMap:          newFuncMap(),
-		options:          map[string]string{},
-		tmpls:            map[string]*Tmpl{},
+		mtx:                sync.RWMutex{},
+		modsMtx:            sync.Mutex{},
+		stopChan:           make(chan struct{}),
+		wg:                 sync.WaitGroup{},
+		cleanupIntvlSecs:   cleanupIntvlSecs,
+		minUpdateIntvlSecs: minUpdateIntvlSecs,
+		delims:             [2]string{"{{", "}}"},
+		funcMap:            newFuncMap(),
+		options:            map[string]string{},
+		tmpls:              map[string]*Tmpl{},
 	}
 
 	t.wg.Add(1)
@@ -169,13 +168,17 @@ func (t *TmplColl) parseFiles(lockMods bool, filenames ...string) error {
 		defer t.modsMtx.Unlock()
 	}
 
+	t.mtx.RLock()
+	minUpdateIntvlSecs := t.minUpdateIntvlSecs
+	t.mtx.RUnlock()
+
 	for _, filename := range filenames {
 		absPath, err := filepath.Abs(filename)
 		if err != nil {
 			return err
 		}
 
-		tmpl := NewTmpl()
+		tmpl := NewTmpl(minUpdateIntvlSecs)
 		tmpl.Delims(t.delims[0], t.delims[1])
 		t.funcMap.accessFunctions(func(funcMap template.FuncMap) {
 			tmpl.FuncsAdd(funcMap)
