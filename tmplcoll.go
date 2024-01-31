@@ -72,7 +72,7 @@ func NewTmplColl(cleanupIntvlSecs ...int64) *TmplColl {
 }
 
 // Stops the TmplColl from removing stale templates.
-func (t *TmplColl) Stop() {
+func (t *TmplColl) Close() {
 	close(t.stopChan)
 	t.wg.Wait()
 }

@@ -40,6 +40,7 @@ func TestTmplColl(t *testing.T) {
 
 	// Create a TmplColl.
 	tmplColl := NewTmplColl()
+	defer tmplColl.Close()
 	tmplColl.FuncsAdd(template.FuncMap{
 		"TestMsg": func() string {
 			return "Test"

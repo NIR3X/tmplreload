@@ -34,6 +34,9 @@ func main() {
 	// Create a new TmplColl (Template Collection).
 	tmplColl := tmplreload.NewTmplColl()
 
+	// Close the TmplColl when the main function ends.
+	defer tmplColl.Close()
+
 	// Define a function to be used in the template.
 	funcMap := template.FuncMap{
 		"currentTime": func() string {
