@@ -32,7 +32,7 @@ import (
 
 func main() {
 	// Create a new TmplColl (Template Collection).
-	tmplColl := tmplreload.New()
+	tmplColl := tmplreload.NewTmplColl()
 
 	// Define a function to be used in the template.
 	funcMap := template.FuncMap{

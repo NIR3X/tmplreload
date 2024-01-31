@@ -35,7 +35,7 @@ type TmplColl struct {
 }
 
 // Creates a new TmplColl.
-func New(cleanupIntvlSecs ...int64) *TmplColl {
+func NewTmplColl(cleanupIntvlSecs ...int64) *TmplColl {
 	if len(cleanupIntvlSecs) == 0 {
 		cleanupIntvlSecs = []int64{60}
 	}
